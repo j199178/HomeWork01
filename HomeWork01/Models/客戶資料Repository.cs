@@ -10,6 +10,12 @@ namespace HomeWork01.Models
         {
             return this.All().FirstOrDefault(m => m.Id == p_id);
         }
+
+        public override IQueryable<客戶資料> All()
+        {
+            return base.All();
+                //.Where(m => m.IsDelete != "1");
+        }
     }
 
     public  interface I客戶資料Repository : IRepository<客戶資料>

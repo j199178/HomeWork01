@@ -16,10 +16,15 @@ namespace HomeWork01.Controllers
         客戶資料Repository m_customerInfo = RepositoryHelper.Get客戶資料Repository();
 
         // GET: 客戶資料
-        public ActionResult Index()
+        public ActionResult Index(string keyWord)
         {
+            var data = m_customerInfo.All();
+            if (!string.IsNullOrEmpty(keyWord))
+            {
+                data = data.Where(m => m.客戶名稱.Contains(keyWord) || m.統一編號.Contains(keyWord) || m.電話.Contains(keyWord) || m.傳真.Contains(keyWord));
+            }
 
-            return View(m_customerInfo.All().ToList());
+            return View(data);
         }
 
         // GET: 客戶資料/Details/5

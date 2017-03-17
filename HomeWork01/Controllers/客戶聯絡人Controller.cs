@@ -12,14 +12,19 @@ namespace HomeWork01.Controllers
 {
     public class 客戶聯絡人Controller : Controller
     {
-        private 客戶資料Entities db = new 客戶資料Entities();
-        客戶聯絡人Repository m_customer = RepositoryHelper.Get客戶聯絡人Repository();
+        //private 客戶資料Entities db = new 客戶資料Entities();
+        客戶聯絡人Repository m_customerRel = RepositoryHelper.Get客戶聯絡人Repository();
+        客戶資料Repository m_customerInfo = RepositoryHelper.Get客戶資料Repository();
 
         // GET: 客戶聯絡人
-        public ActionResult Index()
+        public ActionResult Index(string keyWord)
         {
-            var 客戶聯絡人 = db.客戶聯絡人.Include(客 => 客.客戶資料);
-            return View(客戶聯絡人.ToList());
+            var data = m_customerRel.All().Include(客 => 客.客戶資料);
+            if (!string.IsNullOrEmpty(keyWord))
+            {
+                data.Where(m => m.姓名.Contains(keyWord) || m.職稱.Contains(keyWord) || m.電話.Contains(keyWord));
+            }
+            return View(data);
         }
 
         // GET: 客戶聯絡人/Details/5
@@ -29,7 +34,7 @@ namespace HomeWork01.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            客戶聯絡人 客戶聯絡人 = db.客戶聯絡人.Find(id);
+            客戶聯絡人 客戶聯絡人 = m_customerRel.searchById(id.Value);
             if (客戶聯絡人 == null)
             {
                 return HttpNotFound();
@@ -40,7 +45,7 @@ namespace HomeWork01.Controllers
         // GET: 客戶聯絡人/Create
         public ActionResult Create()
         {
-            ViewBag.客戶Id = new SelectList(db.客戶資料, "Id", "客戶名稱");
+            ViewBag.客戶Id = new SelectList(m_customerInfo.All(), "Id", "客戶名稱");
             return View();
         }
 
@@ -53,12 +58,12 @@ namespace HomeWork01.Controllers
         {
             if (ModelState.IsValid)
             {
-                db.客戶聯絡人.Add(客戶聯絡人);
-                db.SaveChanges();
+                m_customerRel.Add(客戶聯絡人);
+                m_customerRel.UnitOfWork.Commit();
                 return RedirectToAction("Index");
             }
 
-            ViewBag.客戶Id = new SelectList(db.客戶資料, "Id", "客戶名稱", 客戶聯絡人.客戶Id);
+            ViewBag.客戶Id = new SelectList(m_customerInfo.All(), "Id", "客戶名稱", 客戶聯絡人.客戶Id);
             return View(客戶聯絡人);
         }
 
@@ -69,12 +74,12 @@ namespace HomeWork01.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            客戶聯絡人 客戶聯絡人 = db.客戶聯絡人.Find(id);
+            客戶聯絡人 客戶聯絡人 = m_customerRel.searchById(id.Value);
             if (客戶聯絡人 == null)
             {
                 return HttpNotFound();
             }
-            ViewBag.客戶Id = new SelectList(db.客戶資料, "Id", "客戶名稱", 客戶聯絡人.客戶Id);
+            ViewBag.客戶Id = new SelectList(m_customerInfo.All(), "Id", "客戶名稱", 客戶聯絡人.客戶Id);
             return View(客戶聯絡人);
         }
 
@@ -87,11 +92,12 @@ namespace HomeWork01.Controllers
         {
             if (ModelState.IsValid)
             {
+                var db = m_customerRel.UnitOfWork.Context;
                 db.Entry(客戶聯絡人).State = EntityState.Modified;
-                db.SaveChanges();
+                m_customerRel.UnitOfWork.Commit();
                 return RedirectToAction("Index");
             }
-            ViewBag.客戶Id = new SelectList(db.客戶資料, "Id", "客戶名稱", 客戶聯絡人.客戶Id);
+            ViewBag.客戶Id = new SelectList(m_customerInfo.All(), "Id", "客戶名稱", 客戶聯絡人.客戶Id);
             return View(客戶聯絡人);
         }
 
@@ -102,7 +108,7 @@ namespace HomeWork01.Controllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            客戶聯絡人 客戶聯絡人 = db.客戶聯絡人.Find(id);
+            客戶聯絡人 客戶聯絡人 = m_customerRel.searchById(id.Value);
             if (客戶聯絡人 == null)
             {
                 return HttpNotFound();
@@ -115,19 +121,10 @@ namespace HomeWork01.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult DeleteConfirmed(int id)
         {
-            客戶聯絡人 客戶聯絡人 = db.客戶聯絡人.Find(id);
-            db.客戶聯絡人.Remove(客戶聯絡人);
-            db.SaveChanges();
+            客戶聯絡人 客戶聯絡人 = m_customerRel.searchById(id);
+            m_customerRel.Delete(客戶聯絡人);
+            m_customerRel.UnitOfWork.Commit();
             return RedirectToAction("Index");
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing)
-            {
-                db.Dispose();
-            }
-            base.Dispose(disposing);
         }
     }
 }
